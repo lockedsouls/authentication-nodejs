@@ -7,6 +7,7 @@ const fs = require("fs");
 app.use(express.json());
 
 const users = require("./db/users.json");
+const posts = require("./db/posts.json");
 
 app.post("/register", (req, res) => {
     if (users.find(user => user.username == req.body.username)) return res.status(403).send("User already exists");
@@ -20,7 +21,7 @@ app.post("/register", (req, res) => {
     res.status(200).send("Success");
 });
 
-app.post("/login", async (req, res) => {
+app.post("/login", (req, res) => {
     const user = users.find(user => user.username == req.body.username);
 
     if (!user) return res.status(404).send("User does not exist");
@@ -35,15 +36,25 @@ app.post("/login", async (req, res) => {
 });
 
 app.route("/post")
-    .get((req, res) => {
-
+    .get(authTokenMiddleware, (req, res) => {
+        res.status(200).json(posts);
     })
-    .post((req, res) => {
-
+    .post(authTokenMiddleware, (req, res) => {
+        //blah blah
+        //get name and desc from req.body
+        //push it to post
+        //fs.writeFile blah blah
+        res.status(200).send("Magic behind the scene");
     })
 
-function authMiddleware(req, res, next){
-
+function authTokenMiddleware(req, res, next){
+    const token = req.headers["authorization"] ? req.headers["authorization"].split(" ")[1] : null;
+    if (!token) return res.status(401).send("Unauthorized");
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, payload) => {
+        if (error) return res.status(401).send("Unauthorized");
+        req.payload = payload;
+        next();
+    })
 }
 
 app.listen(3000);
