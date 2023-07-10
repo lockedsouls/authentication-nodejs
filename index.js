@@ -21,7 +21,7 @@ app.post("/register", (req, res) => {
     res.status(200).send("Success");
 });
 
-app.post("/login", (req, res) => {
+app.post("/login", alreadyLoggedIn, (req, res) => {
     const user = users.find(user => user.username == req.body.username);
 
     if (!user) return res.status(404).send("User does not exist");
@@ -48,13 +48,24 @@ app.route("/post")
     })
 
 function authTokenMiddleware(req, res, next){
-    const token = req.headers["authorization"] ? req.headers["authorization"].split(" ")[1] : null;
+    const token = req.headers["authorization"] ?? req.headers["authorization"].split(" ")[1];
     if (!token) return res.status(401).send("Unauthorized");
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, payload) => {
         if (error) return res.status(401).send("Unauthorized");
         req.payload = payload;
         next();
     })
+}
+
+function alreadyLoggedIn(req, res, next){
+    const token = req.headers["authorization"] ?? req.headers["authorization"].split(" ")[1];
+    if (token) {
+        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, payload) => {
+            if (error) return res.status(401).send("Invalid token");
+            res.status(300).send("Already logged in");
+            next();
+        })
+    }
 }
 
 app.listen(3000);
