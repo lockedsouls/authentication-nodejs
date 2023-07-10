@@ -68,4 +68,6 @@ function alreadyLoggedIn(req, res, next){
     }
 }
 
+//to log out, add the user token to a table in the database that contains not yet expired but invalid tokens
+
 app.listen(3000);
